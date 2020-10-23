@@ -13,16 +13,9 @@ API_Subcription <- read_csv("API_Subcription.csv") %>%
   mutate(attempt = 1:n()) %>%
   ungroup()
 
-# get ids of people that concluded
-ids <- API_Subcription %>% 
-  filter(COMPLETED_STEP == 'conclude') %>%
+# get ids of people
+ids <- API_Subcription %>%
   pull(USER_ID) %>% unique()
-
-
-# filter on users that concluded to see the steps
-API_Subcription %>%
-  filter(USER_ID %in% ids) %>%
-  arrange(USER_ID,ID)
 
 # some users just have one conclude without the previous steps
 
