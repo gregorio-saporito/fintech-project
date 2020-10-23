@@ -28,7 +28,8 @@ for(i in ids) {
   x <- API_Subcription %>%
     filter(USER_ID == i)
   
-  time_diff <- max(x$DATE_EVENT) - min(x$DATE_EVENT)
+  time_diff <- difftime(max(x$DATE_EVENT), min(x$DATE_EVENT),
+           units = "secs")
   
   extra_attempts <- x %>% 
     group_by(COMPLETED_STEP) %>%

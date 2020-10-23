@@ -65,3 +65,4 @@ aa_fit
 # if time-dependent so the assumptions for the Cox model are not met
 # The plots show how the effects of the covariates change over time.
 autoplot(aa_fit)
+
