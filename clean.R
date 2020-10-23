@@ -29,6 +29,7 @@ API_Subcription %>%
 # we need to count for how long each client has survived
 data <- tibble()
 count_ids = 0
+perc = 0
 
 for(i in ids) {
   x <- API_Subcription %>%
@@ -47,6 +48,8 @@ for(i in ids) {
   
   status <- ifelse(nrow(filter(x,COMPLETED_STEP=='conclude'))==0,0,1)
   
+  main_extra_attempt <- filter(filter(x, attempt > 1),attempt==max(attempt))$COMPLETED_STEP[1]
+  
   data <- data %>%
     bind_rows(
       tibble(
@@ -54,12 +57,17 @@ for(i in ids) {
         # time in seconds
         surv_time = as.double(time_diff),
         status = status,
-        extra_attempts = extra_attempts
+        extra_attempts = extra_attempts,
+        main_extra_attempt = main_extra_attempt
       )
     )
   # track percentage until complete
   count_ids <- count_ids + 1
-  print(paste0("complete",round((count_ids/length(ids))*100),"%"))
+  
+  if(perc!=round((count_ids/length(ids))*100)){
+    print(paste0("complete",round((count_ids/length(ids))*100),"%"))
+  }
+  perc <- round((count_ids/length(ids))*100)
 }
 
 write_csv(data,"data.csv")
