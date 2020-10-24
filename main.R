@@ -86,4 +86,3 @@ theme_economist() +
        subtitle = "Where the main extra attempt occurs")
 
 summary(km_grp_fit)
-
