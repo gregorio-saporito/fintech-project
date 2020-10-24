@@ -29,7 +29,7 @@ for(i in ids) {
     filter(USER_ID == i)
   
   time_diff <- difftime(max(x$DATE_EVENT), min(x$DATE_EVENT),
-           units = "secs")
+           units = "hours")
   
   extra_attempts <- x %>% 
     group_by(COMPLETED_STEP) %>%
@@ -44,6 +44,10 @@ for(i in ids) {
   
   main_extra_attempt <- filter(filter(x, attempt > 1),attempt==max(attempt))$COMPLETED_STEP[1]
   
+  stuck <- x %>%
+    filter(DATE_EVENT==max(DATE_EVENT)) %>%
+    pull(COMPLETED_STEP)
+  
   data <- data %>%
     bind_rows(
       tibble(
@@ -52,9 +56,11 @@ for(i in ids) {
         surv_time = as.double(time_diff),
         status = status,
         extra_attempts = extra_attempts,
-        main_extra_attempt = main_extra_attempt
+        main_extra_attempt = main_extra_attempt,
+        stuck = stuck
       )
     )
+  
   # track percentage until complete
   count_ids <- count_ids + 1
   
