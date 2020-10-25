@@ -86,3 +86,19 @@ theme_economist() +
        subtitle = "Where the main extra attempt occurs")
 
 summary(km_grp_fit)
+
+# Look at where the client was last stuck
+data_reduced <- data %>% 
+  filter(!stuck %in% 
+           c("rapporto"))
+
+km_grp_fit <- survfit(Surv(surv_time, status) ~ stuck, data=data_reduced)
+autoplot(km_grp_fit) +
+  theme_economist() +
+  scale_fill_economist() +
+  scale_colour_economist() +
+  labs(title = "Kaplan-Meier estimates of the probability of survival over time",
+       subtitle = "Where the client is stuck") +
+  theme(legend.text = element_text(size=10))
+
+summary(km_grp_fit)
