@@ -31,6 +31,8 @@ for(i in ids) {
   time_diff <- difftime(max(x$DATE_EVENT), min(x$DATE_EVENT),
            units = "hours")
   
+  mean_time <- time_diff/nrow(x)
+  
   extra_attempts <- x %>% 
     group_by(COMPLETED_STEP) %>%
     filter(attempt == max(attempt)) %>%
@@ -57,7 +59,8 @@ for(i in ids) {
         status = status,
         extra_attempts = extra_attempts,
         main_extra_attempt = main_extra_attempt,
-        stuck = stuck
+        stuck = stuck,
+        mean_time = mean_time
       )
     )
   
