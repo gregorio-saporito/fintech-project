@@ -106,7 +106,7 @@ summary(km_grp_fit)
 
 #-------- LOGISTIC REGRESSION ---------------
 
-inputData <- data[2:6]
+inputData <- data[2:7]
 
 # Create Training Data
 input_ones <- inputData[which(inputData$status == 1), ]  # all 1's
@@ -125,8 +125,8 @@ testData <- rbind(test_ones, test_zeros)  # row bind the 1's and 0's
 
 library(smbinning)
 # segregate continuous and factor variables
-factor_vars <- c ("status", "stuck", "main_extra_attempt" )
-continuous_vars <- c("surv_time", "extra_attempts")
+factor_vars <- c ("status", "stuck")
+continuous_vars <- c("surv_time", "extra_attempts", "mean_time")
 
 #-----
 iv_df <- data.frame(VARS=c(factor_vars, continuous_vars), IV=numeric(5))  # init for IV results
@@ -151,7 +151,7 @@ iv_df <- iv_df[order(-iv_df$IV), ]  # sort
 iv_df
 #-----
 
-logitMod <- glm(status ~ stuck + surv_time + extra_attempts + main_extra_attempt, data=trainingData, family=binomial(link="logit"))
+logitMod <- glm(status ~ stuck + surv_time + extra_attempts + mean_time, data=trainingData, family=binomial(link="logit"))
 
 predicted <- predict(logitMod, testData, type="response")  # predicted scores
 predicted
