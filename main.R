@@ -102,3 +102,69 @@ autoplot(km_grp_fit) +
   theme(legend.text = element_text(size=10))
 
 summary(km_grp_fit)
+
+
+#-------- LOGISTIC REGRESSION ---------------
+
+inputData <- data[2:6]
+
+# Create Training Data
+input_ones <- inputData[which(inputData$status == 1), ]  # all 1's
+input_zeros <- inputData[which(inputData$status == 0), ]  # all 0's
+set.seed(100)  # for repeatability of samples
+input_ones_training_rows <- sample(1:nrow(input_ones), 0.7*nrow(input_ones))  # 1's for training
+input_zeros_training_rows <- sample(1:nrow(input_zeros), 0.7*nrow(input_ones))  # 0's for training. Pick as many 0's as 1's
+training_ones <- input_ones[input_ones_training_rows, ]  
+training_zeros <- input_zeros[input_zeros_training_rows, ]
+trainingData <- rbind(training_ones, training_zeros)  # row bind the 1's and 0's 
+
+# Create Test Data
+test_ones <- input_ones[-input_ones_training_rows, ]
+test_zeros <- input_zeros[-input_zeros_training_rows, ]
+testData <- rbind(test_ones, test_zeros)  # row bind the 1's and 0's 
+
+library(smbinning)
+# segregate continuous and factor variables
+factor_vars <- c ("status", "stuck", "main_extra_attempt" )
+continuous_vars <- c("surv_time", "extra_attempts")
+
+#-----
+iv_df <- data.frame(VARS=c(factor_vars, continuous_vars), IV=numeric(5))  # init for IV results
+
+# compute IV for categoricals
+for(factor_var in factor_vars){
+  smb <- smbinning.factor(trainingData, y="status", x=factor_var)  # WOE table
+  if(class(smb) != "character"){ # heck if some error occured
+    iv_df[iv_df$VARS == factor_var, "IV"] <- smb$iv
+  }
+}
+
+# compute IV for continuous vars
+for(continuous_var in continuous_vars){
+  smb <- smbinning(trainingData, y="status", x=continuous_var)  # WOE table
+  if(class(smb) != "character"){  # any error while calculating scores.
+    iv_df[iv_df$VARS == continuous_var, "IV"] <- smb$iv
+  }
+}
+
+iv_df <- iv_df[order(-iv_df$IV), ]  # sort
+iv_df
+#-----
+
+logitMod <- glm(status ~ stuck + surv_time + extra_attempts + main_extra_attempt, data=trainingData, family=binomial(link="logit"))
+
+predicted <- predict(logitMod, testData, type="response")  # predicted scores
+predicted
+
+library(InformationValue)
+optCutOff <- optimalCutoff(testData$status, predicted)[1] 
+
+summary(logitMod)
+
+library(car)
+vif(logitMod)
+
+misClassError(testData$status, predicted, threshold = optCutOff)
+
+plotROC(testData$status, predicted)
+
