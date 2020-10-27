@@ -124,32 +124,6 @@ test_zeros <- input_zeros[-input_zeros_training_rows, ]
 testData <- rbind(test_ones, test_zeros)  # row bind the 1's and 0's 
 
 library(smbinning)
-# segregate continuous and factor variables
-factor_vars <- c ("status", "stuck")
-continuous_vars <- c("surv_time", "extra_attempts", "mean_time")
-
-#-----
-iv_df <- data.frame(VARS=c(factor_vars, continuous_vars), IV=numeric(5))  # init for IV results
-
-# compute IV for categoricals
-for(factor_var in factor_vars){
-  smb <- smbinning.factor(trainingData, y="status", x=factor_var)  # WOE table
-  if(class(smb) != "character"){ # heck if some error occured
-    iv_df[iv_df$VARS == factor_var, "IV"] <- smb$iv
-  }
-}
-
-# compute IV for continuous vars
-for(continuous_var in continuous_vars){
-  smb <- smbinning(trainingData, y="status", x=continuous_var)  # WOE table
-  if(class(smb) != "character"){  # any error while calculating scores.
-    iv_df[iv_df$VARS == continuous_var, "IV"] <- smb$iv
-  }
-}
-
-iv_df <- iv_df[order(-iv_df$IV), ]  # sort
-iv_df
-#-----
 
 logitMod <- glm(status ~ stuck + surv_time + extra_attempts + main_extra_attempt + mean_time, data=trainingData, family=binomial(link="logit"))
 
