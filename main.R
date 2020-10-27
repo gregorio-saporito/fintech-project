@@ -151,7 +151,7 @@ iv_df <- iv_df[order(-iv_df$IV), ]  # sort
 iv_df
 #-----
 
-logitMod <- glm(status ~ stuck + surv_time + extra_attempts + mean_time, data=trainingData, family=binomial(link="logit"))
+logitMod <- glm(status ~ stuck + surv_time + extra_attempts + main_extra_attempt + mean_time, data=trainingData, family=binomial(link="logit"))
 
 predicted <- predict(logitMod, testData, type="response")  # predicted scores
 predicted
@@ -168,3 +168,8 @@ misClassError(testData$status, predicted, threshold = optCutOff)
 
 plotROC(testData$status, predicted)
 
+Concordance(testData$status, predicted)
+
+sensitivity(testData$status, predicted, threshold = optCutOff)
+
+specificity(testData$status, predicted, threshold = optCutOff)
