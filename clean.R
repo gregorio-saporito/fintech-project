@@ -44,7 +44,8 @@ for(i in ids) {
   
   status <- ifelse(nrow(filter(x,COMPLETED_STEP=='conclude'))==0,0,1)
   
-  main_extra_attempt <- filter(filter(x, attempt > 1),attempt==max(attempt))$COMPLETED_STEP[1]
+  main_extra_attempt <- filter(filter(x, attempt > 1),
+                               attempt==max(attempt))$COMPLETED_STEP[1]
   
   stuck <- x %>%
     filter(DATE_EVENT==max(DATE_EVENT)) %>%

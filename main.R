@@ -7,12 +7,14 @@ library(ggthemes)
 data <- read_csv("data.csv") %>%
   # extra attempts dummy
   mutate(extra_attempts_dummy = ifelse(extra_attempts==0,0,1)) %>%
-  mutate(main_extra_attempt = ifelse(is.na(main_extra_attempt),"none",main_extra_attempt)) %>% 
+  mutate(main_extra_attempt = ifelse(is.na(main_extra_attempt),"none",
+                                     main_extra_attempt)) %>% 
   mutate(main_extra_attempt = factor(main_extra_attempt))
 
 # many outliers for survival time
 # few clients go through the system for a long time
-boxplot(data$surv_time,main="Many outliers going throuh the \n system for a long time")
+boxplot(data$surv_time,main="Many outliers going throuh the 
+        \n system for a long time")
 
 # donut charts to explore the data
 type <- c("status","extra_attempts_dummy","main_extra_attempt","stuck")
@@ -57,7 +59,8 @@ autoplot(km_fit) +
   ggtitle("Kaplan-Meier estimates of \n the probability of survival over time") +
   theme_economist()
 
-# now we look at the survival curve between who makes extra attempts and who doesn't
+# now we look at the survival curve between who makes extra attempts and 
+# who doesn't
 km_grp_fit <- survfit(Surv(surv_time, status) ~ extra_attempts_dummy, data=data)
 # who makes extra attempts is more likely not to conclude and there are 
 # small overlaps between the curves
@@ -112,8 +115,13 @@ inputData <- data[2:7]
 input_ones <- inputData[which(inputData$status == 1), ]  # all 1's
 input_zeros <- inputData[which(inputData$status == 0), ]  # all 0's
 set.seed(100)  # for repeatability of samples
-input_ones_training_rows <- sample(1:nrow(input_ones), 0.7*nrow(input_ones))  # 1's for training
-input_zeros_training_rows <- sample(1:nrow(input_zeros), 0.7*nrow(input_ones))  # 0's for training. Pick as many 0's as 1's
+
+input_ones_training_rows <- sample(1:nrow(input_ones), 0.7*nrow(input_ones))  
+# 1's for training
+
+input_zeros_training_rows <- sample(1:nrow(input_zeros), 0.7*nrow(input_ones))  
+# 0's for training. Pick as many 0's as 1's
+
 training_ones <- input_ones[input_ones_training_rows, ]  
 training_zeros <- input_zeros[input_zeros_training_rows, ]
 trainingData <- rbind(training_ones, training_zeros)  # row bind the 1's and 0's 
@@ -123,9 +131,9 @@ test_ones <- input_ones[-input_ones_training_rows, ]
 test_zeros <- input_zeros[-input_zeros_training_rows, ]
 testData <- rbind(test_ones, test_zeros)  # row bind the 1's and 0's 
 
-library(smbinning)
-
-logitMod <- glm(status ~ stuck + surv_time + extra_attempts + main_extra_attempt + mean_time, data=trainingData, family=binomial(link="logit"))
+logitMod <- glm(status ~ stuck + surv_time + extra_attempts +
+                main_extra_attempt + mean_time, data=trainingData, 
+                family=binomial(link="logit"))
 
 predicted <- predict(logitMod, testData, type="response")  # predicted scores
 predicted
