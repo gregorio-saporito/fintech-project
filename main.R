@@ -9,15 +9,25 @@ data <- read_csv("data.csv") %>%
   mutate(extra_attempts_dummy = ifelse(extra_attempts==0,0,1)) %>%
   mutate(main_extra_attempt = ifelse(is.na(main_extra_attempt),"none",
                                      main_extra_attempt)) %>% 
-  mutate(main_extra_attempt = factor(main_extra_attempt))
+  mutate(main_extra_attempt = factor(main_extra_attempt)) %>%
+  mutate(prom_code = ifelse(is.na(prom_code_id),0,1)) %>%
+  mutate(gender = ifelse(is.na(gender),"not specified", gender)) %>%
+  mutate(age_group = case_when(
+    age >= 0 & age < 20   ~ "less than 20",
+    age >= 20 & age < 40  ~ "20-40",
+    age >= 40 & age < 60  ~ "40-60",
+    age >= 60  ~ "more than 60",
+    is.na(age) ~ "not specified"
+  )) %>%
+  mutate(stuck = factor(stuck),
+         gender = factor(gender),
+         age_group = factor(age_group))
 
-# many outliers for survival time
-# few clients go through the system for a long time
-boxplot(data$surv_time,main="Many outliers going throuh the 
-        \n system for a long time")
+# boxplot of survival time
+boxplot(data$surv_time)
 
 # donut charts to explore the data
-type <- c("status","extra_attempts_dummy","main_extra_attempt","stuck")
+type <- c("status","extra_attempts_dummy","main_extra_attempt","stuck","prom_code")
 
 donut_df <- map_df(type, function(i){
 a <- data[,i] %>%
@@ -51,33 +61,49 @@ ggplot(donut_df, aes(x = 2, y = prop, fill = class)) +
 
 # Kaplan-Meier estimates of the probability of survival over time
 km_fit <- survfit(Surv(surv_time, status) ~ 1, data=data)
-
-summary(km_fit)
-
-# as time passes the probability of concluding increases
 autoplot(km_fit) +
   ggtitle("Kaplan-Meier estimates of \n the probability of survival over time") +
   theme_economist()
 
-# now we look at the survival curve between who makes extra attempts and 
-# who doesn't
-km_grp_fit <- survfit(Surv(surv_time, status) ~ extra_attempts_dummy, data=data)
-# who makes extra attempts is more likely not to conclude and there are 
-# small overlaps between the curves
-autoplot(km_grp_fit) +
+
+# we now look at survival curves by gender
+# we can see that those without specified gender have the highest probability of survival
+# followed by females
+km_trt_fit <- survfit(Surv(surv_time, status) ~ gender, data=data)
+autoplot(km_trt_fit) +
+  labs(title = "Kaplan-Meier estimates of the probability of survival over time",
+       subtitle = "Survival curves by gender") +
+  theme_economist() +
+  scale_fill_economist() +
+  scale_color_economist()
+
+
+# now we look at the differences between different age groups
+km_AG_fit <- survfit(Surv(surv_time, status) ~ age_group, data=data)
+autoplot(km_AG_fit) +
+  labs(title = "Kaplan-Meier estimates of the probability of survival over time",
+       subtitle = "Survival curves by age group") +
+  theme_economist() +
+  scale_fill_economist() +
+  scale_color_economist()
+
+# now we look at the survival curve between who makes extra attempts and who doesn't
+km_att_fit <- survfit(Surv(surv_time, status) ~ extra_attempts_dummy, data=data)
+# interesting intersection between the curves
+# making extra attempts before the intersection means slightly higher probability of survival
+# after the intersection slightly lower probability of survival
+autoplot(km_att_fit) +
   theme_economist() +
   scale_fill_economist() +
   scale_colour_economist() +
   labs(title = "Kaplan-Meier estimates of the probability of survival over time",
        subtitle = "Extra attempts dummy")
-  
-summary(km_grp_fit)
 
-# now we compare groups where the main stuck occurs
-# remove the ones with a too high confidence interval
+# now we compare groups where the main_extra_attempt occurs
+# remove the ones with a too high confidence interval and coclude
 data_reduced <- data %>% 
   filter(!main_extra_attempt %in% 
-           c("antiriciclaggio","rapporto","contract-subscription"))
+           c("antiriciclaggio","rapporto","contract-subscription","conclude"))
 
 # there are still a lot of overlapps with confidence intervals though
 km_grp_fit <- survfit(Surv(surv_time, status) ~ main_extra_attempt, data=data_reduced)
@@ -88,28 +114,9 @@ theme_economist() +
   labs(title = "Kaplan-Meier estimates of the probability of survival over time",
        subtitle = "Where the main extra attempt occurs")
 
-summary(km_grp_fit)
-
-# Look at where the client was last stuck
-data_reduced <- data %>% 
-  filter(!stuck %in% 
-           c("rapporto"))
-
-km_grp_fit <- survfit(Surv(surv_time, status) ~ stuck, data=data_reduced)
-autoplot(km_grp_fit) +
-  theme_economist() +
-  scale_fill_economist() +
-  scale_colour_economist() +
-  labs(title = "Kaplan-Meier estimates of the probability of survival over time",
-       subtitle = "Where the client is stuck") +
-  theme(legend.text = element_text(size=10))
-
-summary(km_grp_fit)
-
-
 #-------- LOGISTIC REGRESSION ---------------
 
-inputData <- data[2:7]
+inputData <- data[2:13]
 
 # Create Training Data
 input_ones <- inputData[which(inputData$status == 1), ]  # all 1's
@@ -132,7 +139,7 @@ test_zeros <- input_zeros[-input_zeros_training_rows, ]
 testData <- rbind(test_ones, test_zeros)  # row bind the 1's and 0's 
 
 logitMod <- glm(status ~ stuck + surv_time + extra_attempts +
-                main_extra_attempt + mean_time, data=trainingData, 
+                main_extra_attempt + mean_time +  gender + prom_code, data=trainingData, 
                 family=binomial(link="logit"))
 
 predicted <- predict(logitMod, testData, type="response")  # predicted scores

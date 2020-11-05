@@ -11,13 +11,29 @@ API_Subcription <- read_csv("API_Subcription.csv") %>%
   group_by(USER_ID,COMPLETED_STEP) %>%
   arrange(USER_ID,COMPLETED_STEP,DATE_EVENT, ID) %>%
   mutate(attempt = 1:n()) %>%
-  ungroup()
+  ungroup() %>%
+  rename(GENDER = SESSO, AGE = ETA)
 
 # get ids of people
 ids <- API_Subcription %>%
   pull(USER_ID) %>% unique()
 
 # some users just have one conclude without the previous steps
+
+
+# function to calculate the survival time
+getsurvtime <- function(){
+  if('conclude' %in% x$COMPLETED_STEP){
+    final <- max(filter(x,COMPLETED_STEP=="conclude")$DATE_EVENT)
+    initial <- min(x$DATE_EVENT)
+    difftime(final, initial, units = "hours")
+  }else{
+    # the last time the dataset was extracted
+    final <- as.POSIXct("2020-11-04 23:35:00", tz = "UCT")
+    initial <- min(x$DATE_EVENT)
+    difftime(final, initial, units = "hours")
+  }
+}
 
 # we need to count for how long each client has survived
 data <- tibble()
@@ -28,17 +44,19 @@ for(i in ids) {
   x <- API_Subcription %>%
     filter(USER_ID == i)
   
-  time_diff <- difftime(max(x$DATE_EVENT), min(x$DATE_EVENT),
-           units = "hours")
+  # survival time in hours
+  time_diff <- getsurvtime()
   
-  mean_time <- time_diff/nrow(x)
+  mean_time <- difftime(max(x$DATE_EVENT), min(x$DATE_EVENT),
+                        units = "hours")/nrow(x)
   
-  extra_attempts <- x %>% 
-    group_by(COMPLETED_STEP) %>%
-    filter(attempt == max(attempt)) %>%
-    mutate(check = ifelse(attempt==1,0,attempt-1)) %>%
-    ungroup() %>%
-    summarise(extra_attempt = sum(check)) %>% pull()
+  extra_attempts <- 0
+  for(s in x$COMPLETED_STEP){
+    ctesp <- x %>%
+      filter(COMPLETED_STEP == s) %>%
+      nrow()
+  extra_attempts <- extra_attempts + ctesp - 1
+  }
   
   # status 1 if death occurred (conclude)
   
@@ -51,6 +69,8 @@ for(i in ids) {
     filter(DATE_EVENT==max(DATE_EVENT)) %>%
     pull(COMPLETED_STEP)
   
+  prom <- x$TEMP_PROMOTION_CODE_ID[1]
+  
   data <- data %>%
     bind_rows(
       tibble(
@@ -61,7 +81,10 @@ for(i in ids) {
         extra_attempts = extra_attempts,
         main_extra_attempt = main_extra_attempt,
         stuck = stuck,
-        mean_time = mean_time
+        mean_time = mean_time,
+        gender = x$GENDER[1],
+        age = x$AGE[1],
+        prom_code_id = prom
       )
     )
   
