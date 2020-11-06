@@ -67,7 +67,8 @@ autoplot(km_fit) +
 
 
 # we now look at survival curves by gender
-# we can see that those without specified gender have the highest probability of survival
+# we can see that those without specified gender have the highest probability of 
+# survival
 # followed by females
 km_trt_fit <- survfit(Surv(surv_time, status) ~ gender, data=data)
 autoplot(km_trt_fit) +
@@ -90,7 +91,8 @@ autoplot(km_AG_fit) +
 # now we look at the survival curve between who makes extra attempts and who doesn't
 km_att_fit <- survfit(Surv(surv_time, status) ~ extra_attempts_dummy, data=data)
 # interesting intersection between the curves
-# making extra attempts before the intersection means slightly higher probability of survival
+# making extra attempts before the intersection means slightly higher probability 
+# of survival
 # after the intersection slightly lower probability of survival
 autoplot(km_att_fit) +
   theme_economist() +
@@ -139,7 +141,8 @@ test_zeros <- input_zeros[-input_zeros_training_rows, ]
 testData <- rbind(test_ones, test_zeros)  # row bind the 1's and 0's 
 
 logitMod <- glm(status ~ stuck + surv_time + extra_attempts +
-                main_extra_attempt + mean_time +  gender + prom_code, data=trainingData, 
+                main_extra_attempt + mean_time +  gender + prom_code, 
+                data=trainingData, 
                 family=binomial(link="logit"))
 
 predicted <- predict(logitMod, testData, type="response")  # predicted scores
