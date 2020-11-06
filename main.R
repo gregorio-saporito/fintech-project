@@ -87,6 +87,17 @@ autoplot(km_AG_fit) +
   scale_fill_economist() +
   scale_color_economist()
 
+# now we look at the differences between different between who has a promotion code
+# and who doesn't
+km_prom_fit <- survfit(Surv(surv_time, status) ~ prom_code, data=data)
+autoplot(km_prom_fit) +
+  labs(title = "Kaplan-Meier estimates of the probability of survival over time",
+       subtitle = "Survival curves by promotion code presence") +
+  theme_economist() +
+  scale_fill_economist() +
+  scale_color_economist()
+
+
 # now we look at the survival curve between who makes extra attempts and who doesn't
 km_att_fit <- survfit(Surv(surv_time, status) ~ extra_attempts_dummy, data=data)
 # interesting intersection between the curves
