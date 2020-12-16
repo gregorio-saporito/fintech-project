@@ -13,4 +13,4 @@ Exploring the subscription process of a fintech start-up based in Milan
   <a href="https://github.com/tommasopessina" rel="nofollow noreferrer"> <img src="https://i.stack.imgur.com/tskMh.png" alt="github"> Github </a> &nbsp;
   
 ## Content
-See Survival_Rate_Analysis.pdf to read the entire report
+See :point_right: [Survival_Rate_Analysis.pdf](https://github.com/gregorio-saporito/fintech-project/blob/main/Survival_Rate_Analysis.pdf) to read the entire report
